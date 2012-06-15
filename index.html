@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+		<link rel="stylesheet" type="text/css" href="css/jquery-autocomplete.css"/>
+		<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+		<script type="text/javascript" src="js/gmap3.min.js"></script>
+		<script type="text/javascript" src="js/jquery-autocomplete.min.js"></script>
+
+ 		<script>
+			$(function(){
+        /*
+           Inicializa o mapa
+        */
+  			$("#map").gmap3({
+													options: {
+								 										center:[-12.90, -38.40],
+																		zoom:12,
+																		mapTypeControl: false,
+																		navigationControl: true,
+																		scrollwheel: true,
+																		streetViewControl: false
+																	 }
+			  });
+
+        /*
+           Retorna as rotas
+           TODO: Ao clicar no link mostrar a rota no mapa
+        */
+        $("#btnRotas").click(function(){
+            $("#rotas").empty();
+            $("#map").gmap3({
+              action: 'getRoute',
+              options:{
+                        origin: $("#trecho-ini").val(),
+                        destination: $("#trecho-fim").val(),
+                        travelMode: google.maps.DirectionsTravelMode.DRIVING,
+                        provideRouteAlternatives: true
+              },
+              callback: function(results){
+                 console.log(results);
+                 $(results.routes).each(function(){
+                  $("#rotas").append('<div id="rota"><a href="#">' + this.summary + ' - ' + this.legs[0].distance.text + ' - ' + this.legs[0].duration.text + '</a></div>');
+                });
+              }
+            });
+        });
+
+        /*
+          Torna os campos de ponto de partida e final como suggest para buscar os endereço no google maps api
+          TODO: Ao mudar de endereço em algum dos campos remover o marcador anterior
+        */
+        $("[name^=trecho]").autocomplete({
+            source: function() {
+              var $this = $(this);
+              $("#map").gmap3({
+                action:'getAddress',
+                address: $(this).val(),
+                callback:function(results){
+                  if (!results) return;
+                  $this.autocomplete(
+                    'display', 
+                    results,
+                    false
+                  );
+                }
+              });
+            },
+            cb:{
+              cast: function(item){
+                return item.formatted_address;
+              },
+              select: function(item) {
+                $("#map").gmap3(
+                  {action:'addMarker',
+                    latLng:item.geometry.location,
+                    map:{center:true}
+                  }
+                );
+              }
+            }
+          })
+          .focus();
+
+
+
+  		});
+
+		</script>
+		<style>
+			body{
+				margin: 0px;
+			}
+			#map{
+				position: absolute;
+				right: 0px;
+				height: 100%;
+				width: 65%;
+				border-left: solid black 1px;
+			}
+			#form{
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+    <div class="well" style="height:100%">
+		<form id="form" >
+			<label>Ponto de Partida</label>
+			<input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6"/>
+			<label id="lblPF">Ponto Final</label>
+			<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6"/>
+			<br/>
+		  <button id="btnRotas" type="button" class="btn btn-primary">
+			Buscar Rotas
+			</button>
+		</form>
+		
+    <label>Rotas</label>
+    <div id="rotas"></div>
+	</body>
+</html>
