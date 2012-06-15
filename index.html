@@ -7,7 +7,6 @@
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 		<script type="text/javascript" src="js/gmap3.min.js"></script>
 		<script type="text/javascript" src="js/jquery-autocomplete.min.js"></script>
-
  		<script>
 			$(function(){
         /*
@@ -27,6 +26,7 @@
         /*
            Retorna as rotas
            TODO: Ao clicar no link mostrar a rota no mapa
+					 TODO: Limpar rotas anteriormente pesquisadas
         */
         $("#btnRotas").click(function(){
             $("#rotas").empty();
@@ -39,11 +39,16 @@
                         provideRouteAlternatives: true
               },
               callback: function(results){
-                 console.log(results);
-                 $(results.routes).each(function(){
-                  $("#rotas").append('<div id="rota"><a href="#">' + this.summary + ' - ' + this.legs[0].distance.text + ' - ' + this.legs[0].duration.text + '</a></div>');
-                });
-              }
+																					if (!results) return;
+																					$(this).gmap3({ action:'addDirectionsRenderer',
+																													panelId: 'rotas',
+																													options:{
+																																		preserveViewport: true,
+																																		draggable: false,
+																																		directions:results
+																													}
+																					});
+							}
             });
         });
 
@@ -80,45 +85,44 @@
                 );
               }
             }
-          })
-          .focus();
-
-
-
+          }).focus();
   		});
+
 
 		</script>
 		<style>
 			body{
 				margin: 0px;
+				overflow:hidden;
 			}
+
 			#map{
+				border-left: solid black 1px;
+				height: 100%;
+				overflow:hidden;
 				position: absolute;
 				right: 0px;
-				height: 100%;
 				width: 65%;
-				border-left: solid black 1px;
 			}
-			#form{
-				height: 100%;
+
+			#left{
+				height: 95%;
+				position: absolute;
+				overflow-y:scroll;
+				width: 32%;
 			}
 		</style>
 	</head>
 	<body>
+		<div id="left" class="well">
+			<form id="form">
+				<label>Ponto de Partida</label> <input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6" value="augusto lopes pontes"/>
+				<label id="lblPF">Ponto Final</label>	<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6" value="alameda papete"/>
+				<br/>
+			  <button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
+			</form>
+	    <div id="rotas"></div>
+		</div>
 		<div id="map"></div>
-    <div class="well" style="height:100%">
-		<form id="form" >
-			<label>Ponto de Partida</label>
-			<input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6"/>
-			<label id="lblPF">Ponto Final</label>
-			<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6"/>
-			<br/>
-		  <button id="btnRotas" type="button" class="btn btn-primary">
-			Buscar Rotas
-			</button>
-		</form>
-		
-    <label>Rotas</label>
-    <div id="rotas"></div>
 	</body>
 </html>
