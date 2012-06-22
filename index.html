@@ -10,7 +10,8 @@
 	<script>
 	$(function(){
 
-		$("#rotas").hide();
+
+		$("#rotas, #lblRotas").hide();
 			
 		/*
 		Inicializa o mapa
@@ -107,36 +108,46 @@
 		}).focus();		
 
 		$("#btnponto").click(function(){
-			$("#map").gmap3({ action: 'addMarker',
-												address: $("#ponto").val(),
-												marker:{
-																options:{draggable: true},
-										 						events: {
-																					dragend: 
-																						function(marker, event, data){
-																							$(this).gmap3({
-																								action: 'getAddress',
-																								latLng: marker.getPosition(),
-																								callback:function(results){
-																									$("#ponto").val(results[0].formatted_address);
-																								}
-																							})
-																				 		},
-																					click: 
-																						function(marker, event, data){
-																							$(this).gmap3({
-																								action: 'addCircle',
-																								center: marker.getPosition(),
-																								radius : 750,
-																								fillColor : "#FFAF9F",
-																								strokeColor : "#FF512F"
-																							})
-																						}
-
-																}
-													}
-											});
+				$("#map").gmap3({
+				    action: 'addMarker',
+				    address: $("#ponto").val(),
+				    marker: {
+				        options: {
+				            draggable: true
+				        },
+				        events: {
+				            dragend: function(marker,
+				            event,
+				            data){
+				                $(this).gmap3({
+				                    action: 'getAddress',
+				                    latLng: marker.getPosition(),
+				                    callback: function(results){
+				                        $("#ponto").val(results[
+				                            0
+				                        ].formatted_address);
+				                    }
+				                })
+				            },
+				            click: function(marker,
+				            event,
+				            data){
+				                $("#showRaio").click(function(){
+				                    $("#map").gmap3({
+				                        action: 'addCircle',
+				                        center: marker.getPosition(),
+				                        radius: 1000,
+				                        fillColor: "#FFAF9F",
+				                        strokeColor: "#FF512F"
+				                    })
+				                });
+				            }
+				        }
+				    }
+				});
+			console.log("1");
 		});
+
 	});
 
 
@@ -147,7 +158,7 @@
 		$("#rotas > tbody").empty();
 
 		$.each(r.routes, function(key, value){
-			$('#rotas > tbody:first').append("<tr><td><a href='#' key='" + key + "'><i class='icon-search'></i></a></td><td>" + value.summary + "</td><td>" + value.legs[0].distance.text + "</td><td>" + value.legs[0].duration.text + "</td></tr>");			
+			$('#rotas > tbody:first').append("<tr><td><a href='#' key='" + key + "'><i class='icon-search'></i></a></td><td><i class='icon-plus'></i></td><td>" + value.summary + "</td><td>" + value.legs[0].distance.text + "</td><td>" + value.legs[0].duration.text + "</td></tr>");			
 			$("[key=" + key + "]").live("click", function(){
 				$("#map").gmap3(
 					{action:'clear'},
@@ -162,7 +173,7 @@
 				);
 			});
 		});
-		$("#rotas").show();
+		$("#rotas, #lblRotas").show();
 	}
 
 </script>
@@ -198,11 +209,14 @@ body{
 		<button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
 
 		<br/><br/>
+
+		<label id="lblRotas">Rotas Disponiveis</label>
 		<table id="rotas" class="table table-bordered table-condensed">
 			<thead>
 				<tr>
-					<th width="5%"><i class='icon-search'></i></th>
-				  <th width="55%">Rota</th>
+					<th width="3%"><i class='icon-search'></i></th>
+					<th width="3%"><i class='icon-plus'></i></th>
+				  <th width="54%">Rota</th>
 				  <th width="20%">Dist.</th>
 				  <th width="20%">Tempo</th>
 				</tr>
@@ -210,10 +224,37 @@ body{
 			<tbody>
 			</tbody>
 		</table>
-		<br/>
 
-		<label id="lblPonto">Adicionar Ponto</label>	<textarea id="ponto" name="ponto" class="span6"></textarea>
-		<button id="btnponto" type="button" class="btn btn-primary">Adicionar Ponto</button>
+		<label id="lblMinhasRotas">Minhas Rotas</label>
+		<table id="minhasrotas" class="table table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th width="3%"><i class='icon-search'></i></th>
+					<th width="3%"><i class='icon-remove'></i></th>
+				  <th width="54%">Rota</th>
+				  <th width="20%">Dist.</th>
+				  <th width="20%">Tempo</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr><td colspan="5" align="center">Nenhuma rota salva</td></tr>
+			</tbody>
+		</table>
+
+
+		<label id="lblPonto">Onde voce esta? Digite aqui o endereco:</label>	
+		<textarea id="ponto" name="ponto" class="span6"></textarea>
+		<button id="btnponto" type="button" class="btn btn-primary">Ver no Mapa</button>
+
+		<br/><br/>
+
+
+		Raio (metros):<br/>
+    <input id="raio" name="raio" class="span1" type="text" value="100" style="text-align:center; top: 4px; position:relative;">
+		<button class="btn" type="button" id="showRaio">Marcar no Mapa</button>
+		<button class="btn" type="button">Buscar Rotas</button>
+
+
 
 	</div>
 	<div id="map"></div>
