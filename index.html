@@ -1,128 +1,144 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
-		<link rel="stylesheet" type="text/css" href="css/jquery-autocomplete.css"/>
-		<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-		<script type="text/javascript" src="js/gmap3.min.js"></script>
-		<script type="text/javascript" src="js/jquery-autocomplete.min.js"></script>
- 		<script>
-			$(function(){
-        /*
-           Inicializa o mapa
-        */
-  			$("#map").gmap3({
-													options: {
-								 										center:[-12.90, -38.40],
-																		zoom:12,
-																		mapTypeControl: false,
-																		navigationControl: true,
-																		scrollwheel: true,
-																		streetViewControl: false
-																	 }
-			  });
-
-        /*
-           Retorna as rotas
-           TODO: Ao clicar no link mostrar a rota no mapa
-					 TODO: Limpar rotas anteriormente pesquisadas
-        */
-        $("#btnRotas").click(function(){
-            $("#rotas").empty();
-            $("#map").gmap3({
-              action: 'getRoute',
-              options:{
-                        origin: $("#trecho-ini").val(),
-                        destination: $("#trecho-fim").val(),
-                        travelMode: google.maps.DirectionsTravelMode.DRIVING,
-                        provideRouteAlternatives: true
-              },
-              callback: function(results){
-																					if (!results) return;
-																					$(this).gmap3({ action:'addDirectionsRenderer',
-																													panelId: 'rotas',
-																													options:{
-																																		preserveViewport: true,
-																																		draggable: false,
-																																		directions:results
-																													}
-																					});
-							}
-            });
-        });
-
-        /*
-          Torna os campos de ponto de partida e final como suggest para buscar os endereço no google maps api
-          TODO: Ao mudar de endereço em algum dos campos remover o marcador anterior
-        */
-        $("[name^=trecho]").autocomplete({
-            source: function() {
-              var $this = $(this);
-              $("#map").gmap3({
-                action:'getAddress',
-                address: $(this).val(),
-                callback:function(results){
-                  if (!results) return;
-                  $this.autocomplete(
-                    'display', 
-                    results,
-                    false
-                  );
-                }
-              });
-            },
-            cb:{
-              cast: function(item){
-                return item.formatted_address;
-              },
-              select: function(item) {
-                $("#map").gmap3(
-                  {action:'addMarker',
-                    latLng:item.geometry.location,
-                    map:{center:true}
-                  }
-                );
-              }
-            }
-          }).focus();
-  		});
-
-
-		</script>
-		<style>
-			body{
-				margin: 0px;
-				overflow:hidden;
+<head>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+	<link rel="stylesheet" type="text/css" href="css/jquery-autocomplete.css"/>
+	<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript" src="js/gmap3.min.js"></script>
+	<script type="text/javascript" src="js/jquery-autocomplete.min.js"></script>
+	<script>
+	$(function(){
+		/*
+		Inicializa o mapa
+		*/
+		$("#map").gmap3({
+			options: {
+				center:[-12.90, -38.40],
+				zoom:12,
+				mapTypeControl: false,
+				navigationControl: true,
+				scrollwheel: true,
+				streetViewControl: false
 			}
+		});
 
-			#map{
-				border-left: solid black 1px;
-				height: 100%;
-				overflow:hidden;
-				position: absolute;
-				right: 0px;
-				width: 65%;
-			}
+		/*
+		Retorna as rotas
+		TODO: Ao clicar no link mostrar a rota no mapa
+		TODO: Limpar rotas anteriormente pesquisadas
+		*/
+		$("#btnRotas").click(function(){
+			$("#rotas").empty();
+			$("#map").gmap3({
+				action: 'getRoute',
+				options:{
+					origin: $("#trecho-ini").val(),
+					destination: $("#trecho-fim").val(),
+					travelMode: google.maps.DirectionsTravelMode.DRIVING,
+					provideRouteAlternatives: true
+				},
+				callback: function(results){
+					showQuadro(results);
+				}
+			});
+		});
 
-			#left{
-				height: 95%;
-				position: absolute;
-				overflow-y:scroll;
-				width: 32%;
+	  /*
+		Torna os campos de ponto de partida e final como suggest para buscar os endereço no google maps api
+		TODO: Ao mudar de endereço em algum dos campos remover o marcador anterior
+		*/
+		$("[name^=trecho]").autocomplete({
+			source: function() {
+				var $this = $(this);
+				$("#map").gmap3({
+					action:'getAddress',
+					address: $(this).val(),
+					callback:function(results){
+						if (!results) return;
+						$this.autocomplete(
+							'display', 
+							results,
+							false
+						);
+					}
+				});
+			},
+			cb:{
+				cast: function(item){
+					return item.formatted_address;
+				},
+				select: function(item) {
+					$("#map").gmap3(
+						{
+							action:'addMarker',
+							latLng:item.geometry.location,
+							map:{center:true}
+						}
+					);
+				}
 			}
-		</style>
-	</head>
-	<body>
-		<div id="left" class="well">
-			<form id="form">
-				<label>Ponto de Partida</label> <input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6" value="augusto lopes pontes"/>
-				<label id="lblPF">Ponto Final</label>	<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6" value="alameda papete"/>
-				<br/>
-			  <button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
-			</form>
-	    <div id="rotas"></div>
-		</div>
-		<div id="map"></div>
-	</body>
+		}).focus();
+	});
+
+	// Função que monta o quadro com as rotas disponíveis e ao clicar na rota mostra a mesma no mapa.
+	function showQuadro(r){
+		var link;
+		$("#rotas").html("");
+		$.each(r.routes, function(key, value){
+			link = "<a href='#' par='" + key + "'>" + value.summary + "</a>";
+		  $("#rotas").append(link);
+		  $("#rotas").append("<br/>");
+			$("[par=" + key + "]").live("click", function(){
+				$("#map").gmap3(
+					{action:'clear'},
+					{ action:'addDirectionsRenderer',
+						options:{
+							preserveViewport: true,
+							draggable: false,
+							directions: r,
+							routeIndex: key
+						}
+					}
+				);
+			});
+		});
+	}
+
+</script>
+<style>
+body{
+	margin: 0px;
+	overflow:hidden;
+}
+
+#map{
+	border-left: solid black 1px;
+	height: 100%;
+	overflow:hidden;
+	position: absolute;
+	right: 0px;
+	width: 65%;
+}
+
+#left{
+	height: 95%;
+	position: absolute;
+	overflow-y:scroll;
+	width: 32%;
+}
+</style>
+</head>
+<body>
+	<div id="left" class="well">
+		<form id="form">
+			<label>Ponto de Partida</label> <input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6" value="augusto lopes pontes"/>
+			<label id="lblPF">Ponto Final</label>	<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6" value="alameda papete"/>
+			<br/>
+			<button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
+		</form>
+		<div id="rotas"></div>
+	</div>
+	<div id="map"></div>
+</body>
 </html>
