@@ -9,6 +9,9 @@
 	<script type="text/javascript" src="js/jquery-autocomplete.min.js"></script>
 	<script>
 	$(function(){
+
+		$("#rotas").hide();
+			
 		/*
 		Inicializa o mapa
 		*/
@@ -29,7 +32,6 @@
 		TODO: Limpar rotas anteriormente pesquisadas
 		*/
 		$("#btnRotas").click(function(){
-			$("#rotas").empty();
 			$("#map").gmap3({
 				action: 'getRoute',
 				options:{
@@ -113,18 +115,28 @@
 																					dragend: 
 																						function(marker, event, data){
 																							$(this).gmap3({
-																								action:'getAddress',
-																								latLng:marker.getPosition(),
+																								action: 'getAddress',
+																								latLng: marker.getPosition(),
 																								callback:function(results){
 																									$("#ponto").val(results[0].formatted_address);
 																								}
 																							})
-																				 		}
-																				}
-												}
+																				 		},
+																					click: 
+																						function(marker, event, data){
+																							$(this).gmap3({
+																								action: 'addCircle',
+																								center: marker.getPosition(),
+																								radius : 750,
+																								fillColor : "#FFAF9F",
+																								strokeColor : "#FF512F"
+																							})
+																						}
+
+																}
+													}
 											});
 		});
-
 	});
 
 
@@ -132,13 +144,11 @@
 
 	// Função que monta o quadro com as rotas disponíveis e ao clicar na rota mostra a mesma no mapa.
 	function showQuadro(r){
-		var link;
-		$("#rotas").html("");
+		$("#rotas > tbody").empty();
+
 		$.each(r.routes, function(key, value){
-			link = "<a href='#' par='" + key + "'>" + value.summary + " - " + value.legs[0].distance.text + " - " + value.legs[0].duration.text +  "</a>";
-		  $("#rotas").append(link);
-		  $("#rotas").append("<br/>");
-			$("[par=" + key + "]").live("click", function(){
+			$('#rotas > tbody:first').append("<tr><td><a href='#' key='" + key + "'><i class='icon-search'></i></a></td><td>" + value.summary + "</td><td>" + value.legs[0].distance.text + "</td><td>" + value.legs[0].duration.text + "</td></tr>");			
+			$("[key=" + key + "]").live("click", function(){
 				$("#map").gmap3(
 					{action:'clear'},
 					{ action:'addDirectionsRenderer',
@@ -152,6 +162,7 @@
 				);
 			});
 		});
+		$("#rotas").show();
 	}
 
 </script>
@@ -187,7 +198,18 @@ body{
 		<button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
 
 		<br/><br/>
-		<div id="rotas"></div>
+		<table id="rotas" class="table table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th width="5%"><i class='icon-search'></i></th>
+				  <th width="55%">Rota</th>
+				  <th width="20%">Dist.</th>
+				  <th width="20%">Tempo</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
 		<br/>
 
 		<label id="lblPonto">Adicionar Ponto</label>	<textarea id="ponto" name="ponto" class="span6"></textarea>
