@@ -79,14 +79,63 @@
 				}
 			}
 		}).focus();
+
+
+		$("#ponto").autocomplete({
+			source: function() {
+				var $this = $(this);
+				$("#map").gmap3({
+					action:'getAddress',
+					address: $(this).val(),
+					callback:function(results){
+						if (!results) return;
+						$this.autocomplete(
+							'display', 
+							results,
+							false
+						);
+					}
+				});
+			},
+			cb:{
+				cast: function(item){
+					return item.formatted_address;
+				}
+			}
+		}).focus();		
+
+		$("#btnponto").click(function(){
+			$("#map").gmap3({ action: 'addMarker',
+												address: $("#ponto").val(),
+												marker:{
+																options:{draggable: true},
+										 						events: {
+																					dragend: 
+																						function(marker, event, data){
+																							$(this).gmap3({
+																								action:'getAddress',
+																								latLng:marker.getPosition(),
+																								callback:function(results){
+																									$("#ponto").val(results[0].formatted_address);
+																								}
+																							})
+																				 		}
+																				}
+												}
+											});
+		});
+
 	});
+
+
+
 
 	// Função que monta o quadro com as rotas disponíveis e ao clicar na rota mostra a mesma no mapa.
 	function showQuadro(r){
 		var link;
 		$("#rotas").html("");
 		$.each(r.routes, function(key, value){
-			link = "<a href='#' par='" + key + "'>" + value.summary + "</a>";
+			link = "<a href='#' par='" + key + "'>" + value.summary + " - " + value.legs[0].distance.text + " - " + value.legs[0].duration.text +  "</a>";
 		  $("#rotas").append(link);
 		  $("#rotas").append("<br/>");
 			$("[par=" + key + "]").live("click", function(){
@@ -131,13 +180,19 @@ body{
 </head>
 <body>
 	<div id="left" class="well">
-		<form id="form">
-			<label>Ponto de Partida</label> <input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6" value="augusto lopes pontes"/>
-			<label id="lblPF">Ponto Final</label>	<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6" value="alameda papete"/>
-			<br/>
-			<button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
-		</form>
+
+		<label>Ponto de Partida</label> <input type="text" id="trecho-ini" name="trecho-ini" trecho="1" class="span6" value="augusto lopes pontes"/>
+		<label id="lblPF">Ponto Final</label>	<input type="text" id="trecho-fim" name="trecho-fim" trecho="2" class="span6" value="alameda papete"/>
+		<br/>
+		<button id="btnRotas" type="button" class="btn btn-primary">Buscar Rotas</button>
+
+		<br/><br/>
 		<div id="rotas"></div>
+		<br/>
+
+		<label id="lblPonto">Adicionar Ponto</label>	<textarea id="ponto" name="ponto" class="span6"></textarea>
+		<button id="btnponto" type="button" class="btn btn-primary">Adicionar Ponto</button>
+
 	</div>
 	<div id="map"></div>
 </body>
